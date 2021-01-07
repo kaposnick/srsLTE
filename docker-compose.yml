@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+  epc:
+    build: ./Dockerfile_epc
+    image: naposto/srsepc
+    container_name: epc
+    privileged: true
+    volumes:
+      - type: bind
+        source: ./test/docker_files/user_db.csv
+        target: /conf/user_db.csv
+      - type: bind
+        source: ./test/docker_files/epc.conf
+        target: /conf/epc.conf
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.2"
+  
+  enb1:
+    build: ./Dockerfile_enb
+    image: naposto/srsenb
+    container_name: enb1
+    privileged: true
+    depends_on:
+      - epc
+    volumes:
+      - type: bind
+        source: ./test/docker_files/rr.conf
+        target: /conf/rr.conf
+      - type: bind
+        source: ./test/docker_files/enb.conf
+        target: /conf/enb.conf
+    networks:
+      srsnet:
+    
+  enb2:
+    build: ./Dockerfile_enb
+    image: naposto/srsenb
+    container_name: enb2
+    privileged: true
+    depends_on:
+      - epc
+    volumes:
+      - type: bind
+        source: ./test/docker_files/rr.conf
+        target: /conf/rr.conf
+      - type: bind
+        source: ./test/docker_files/enb2.conf
+        target: /conf/enb.conf
+    networks:
+      srsnet:
+
+networks:
+  srsnet:
+    name: srsnet
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/16"
+
+
+      
+
