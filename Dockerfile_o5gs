@@ -1,8 +1,0 @@
-ARG dist=ubuntu
-ARG tag=latest
-ARG username=naposto
-FROM ${username}/${dist}-${tag}-open5gs-build
-
-RUN apt install -y iptables
-
-COPY test/docker_files/open5gs/ /root/open5gs/build/configs/open5gs/
