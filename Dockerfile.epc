@@ -1,0 +1,54 @@
+ARG UBUNTU_VERSION=bionic
+ARG SRSLTE_RELEASE_TAG=release_20_10_1
+
+FROM ubuntu:${UBUNTU_VERSION} as builder
+ARG UBUNTU_VERSION
+ARG SRSLTE_REPO=https://github.com/srsLTE/srsLTE
+ARG SRSLTE_CHECKOUT=${SRSLTE_RELEASE_TAG}
+
+RUN apt update \
+    && apt install -y \
+    build-essential \
+    git \
+    cmake \
+    libmbedtls-dev \ 
+    libfftw3-dev \
+    libboost-program-options-dev \
+    libconfig++-dev \
+    libsctp-dev \
+ && mkdir /srslte \
+ && cd /srslte \
+ && git clone $SRSLTE_REPO srslte \
+ && cd srslte \
+ && git checkout ${SRSLTE_CHECKOUT} \
+ && mkdir build \
+ && cd build \
+ && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/srslte \ 
+   -DENABLE_SRSENB=OFF \ 
+   -DENABLE_SRSUE=OFF \ 
+   -DENABLE_UHD=OFF  \
+   -DENABLE_BLADERF=OFF \ 
+   -DENABLE_SOAPYSDR=OFF \
+   -DENABLE_ZEROMQ=OFF ../ \
+ && make \
+ && make install \
+ && ./srslte_install_configs.sh user
+
+FROM ubuntu:${UBUNTU_VERSION}
+ARG UBUNTU_VERSION
+
+RUN apt update \
+ && apt install -y \
+        libmbedtls-dev \
+        libfftw3-dev \
+        libboost-program-options-dev \
+        libconfig++-dev \
+        libsctp-dev
+
+COPY --from=builder /opt/srslte /opt/srslte
+COPY --from=builder /root/.config/srslte/ /root/.config/srslte/ 
+
+ENV LD_LIBRARY_PATH /opt/srslte/lib:$LD_LIBRARY_PATH
+ENV PATH /opt/srslte/bin:$PATH
+
+CMD ["srsepc", "--hss.db_file", "/conf/user_db.csv", "/conf/epc.conf"]

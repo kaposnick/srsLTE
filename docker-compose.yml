@@ -1,0 +1,254 @@
+version: '3.9'
+
+volumes:
+  mongodb: {}
+
+services:
+  core:
+    image: tianon/true
+    restart: "no"
+    depends_on:
+      - webui
+      - mme
+      - hss
+      - pcrf
+      - sgwc
+      - pgwc
+      - sgwu
+      - pgwu
+      - enb1
+      - enb2
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    hostname: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb:/data/db
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.57"
+
+  webui:
+    image: ${USER}/open5gs-webui
+    container_name: webui
+    hostname: webui
+    depends_on:
+      - mongodb
+    ports:
+      - "3000:3000"
+    environment:
+      DB_URI: mongodb://mongodb/open5gs
+    networks:
+      srsnet:
+
+  mme:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: mme
+    hostname: mme
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.50"
+    command: "/root/open5gs/build/src/mme/open5gs-mmed -c /root/open5gs/build/configs/open5gs/mme.yaml"
+
+  sgwc:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: sgwc
+    hostname: sgwc
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.51"
+    command: "/root/open5gs/build/src/sgwc/open5gs-sgwcd -c /root/open5gs/build/configs/open5gs/sgwc.yaml"
+
+  pgwc:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: pgwc
+    hostname: pgwc
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.52"
+    command: "/root/open5gs/build/src/smf/open5gs-smfd -c /root/open5gs/build/configs/open5gs/smf.yaml"
+
+  sgwu:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: sgwu
+    hostname: sgwu
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.53"
+    command: "/root/open5gs/build/src/sgwu/open5gs-sgwud -c /root/open5gs/build/configs/open5gs/sgwu.yaml"
+  
+  pgwu:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: pgwu
+    hostname: pgwu
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.ip_forward=1
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.54"
+    command: /bin/bash -c "/root/setup.sh; iptables -t nat -A POSTROUTING -s 10.45.0.0/16 ! -o ogstun -j MASQUERADE ; /root/open5gs/build/src/upf/open5gs-upfd -c /root/open5gs/build/configs/open5gs/upf.yaml"
+
+  hss:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: hss
+    hostname: hss
+    depends_on: 
+      - mongodb
+    environment:
+      - DB_URI=mongodb://mongodb/open5gs
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.55"
+    command: "/root/open5gs/build/src/hss/open5gs-hssd -c /root/open5gs/build/configs/open5gs/hss.yaml"
+
+  pcrf:
+    image: ${USER}/${DIST-ubuntu}-${TAG-latest}-open5gs-exec    
+    container_name: pcrf
+    hostname: pcrf
+    depends_on: 
+      - mongodb
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.56"
+    command: "/root/open5gs/build/src/pcrf/open5gs-pcrfd -c /root/open5gs/build/configs/open5gs/pcrf.yaml"
+
+
+  epc:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.epc
+    image: naposto/srsepc
+    container_name: epc
+    hostname: epc
+    privileged: true
+    volumes:
+      - type: bind
+        source: ./test/docker_files/user_db.csv
+        target: /conf/user_db.csv
+      - type: bind
+        source: ./test/docker_files/epc.conf
+        target: /conf/epc.conf
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.2"
+  
+  enb1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.enbue
+    image: naposto/srsenb-enb-ue
+    container_name: enb1
+    hostname: enb1
+    privileged: true
+    volumes:
+      - type: bind
+        source: ./test/docker_files/rr.conf
+        target: /conf/rr.conf
+      - type: bind
+        source: ./test/docker_files/enb.conf
+        target: /conf/enb.conf
+    command: ["srsenb", "--enb_files.rr_config", "/conf/rr.conf", "/conf/enb.conf"]
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.3"          
+  
+  enb2:      
+    image: naposto/srs-enb-ue
+    container_name: enb2
+    hostname: enb2
+    privileged: true
+    volumes:
+      - type: bind
+        source: ./test/docker_files/rr.conf
+        target: /conf/rr.conf
+      - type: bind
+        source: ./test/docker_files/enb2.conf
+        target: /conf/enb.conf
+    command: ["srsenb", "--enb_files.rr_config", "/conf/rr.conf", "/conf/enb.conf"]
+    networks:
+      srsnet:
+          ipv4_address: "172.18.0.4"
+
+  ue1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.ue
+    image: naposto/srs-enb-ue
+    container_name: ue1
+    privileged: true
+    depends_on:
+      - enb1
+    volumes:
+      - type: bind
+        source: ./test/docker_files/ue.conf
+        target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
+    networks:
+      srsnet:
+        ipv4_address: "172.18.0.5"
+
+  ue2:
+    image: naposto/srs-enb-ue
+    container_name: ue2
+    privileged: true
+    depends_on:
+      - enb1
+    volumes:
+      - type: bind
+        source: ./test/docker_files/ue2.conf
+        target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
+    networks:
+        srsnet:  
+          ipv4_address: "172.18.0.6"
+  
+  ue3:
+    image: naposto/srs-enb-ue
+    container_name: ue3
+    privileged: true
+    depends_on:
+      - enb2
+    volumes:
+      - type: bind        
+        source: ./test/docker_files/ue3.conf
+        target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
+    networks:
+        srsnet:
+            ipv4_address: "172.18.0.7"
+
+  ue4:
+    image: naposto/srs-enb-ue
+    container_name: ue4
+    privileged: true
+    depends_on:
+      - enb2
+    volumes:
+      - type: bind        
+        source: ./test/docker_files/ue4.conf
+        target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
+    networks:
+        srsnet:
+            ipv4_address: "172.18.0.8"
+
+networks:
+  srsnet:
+    name: srsnet
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/16"
+
+
+      
+
