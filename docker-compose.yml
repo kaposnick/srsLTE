@@ -124,7 +124,7 @@ services:
   epc:
     build:
       context: .
-      dockerfile: ./Dockerfile_epc
+      dockerfile: ./Dockerfile.epc
     image: naposto/srsepc
     container_name: epc
     hostname: epc
@@ -143,14 +143,11 @@ services:
   enb1:
     build:
       context: .
-      dockerfile: ./Dockerfile_enb
-    image: naposto/srsenb
+      dockerfile: ./Dockerfile.enbue
+    image: naposto/srsenb-enb-ue
     container_name: enb1
     hostname: enb1
     privileged: true
-    depends_on: 
-      - mme
-      - sgwu
     volumes:
       - type: bind
         source: ./test/docker_files/rr.conf
@@ -158,21 +155,16 @@ services:
       - type: bind
         source: ./test/docker_files/enb.conf
         target: /conf/enb.conf
+    command: ["srsenb", "--enb_files.rr_config", "/conf/rr.conf", "/conf/enb.conf"]
     networks:
       srsnet:
         ipv4_address: "172.18.0.3"          
   
-  enb2:
-    build:
-      context: .
-      dockerfile: ./Dockerfile_enb        
-    image: naposto/srsenb
+  enb2:      
+    image: naposto/srs-enb-ue
     container_name: enb2
     hostname: enb2
     privileged: true
-    depends_on:
-      - mme
-      - sgwu 
     volumes:
       - type: bind
         source: ./test/docker_files/rr.conf
@@ -180,6 +172,7 @@ services:
       - type: bind
         source: ./test/docker_files/enb2.conf
         target: /conf/enb.conf
+    command: ["srsenb", "--enb_files.rr_config", "/conf/rr.conf", "/conf/enb.conf"]
     networks:
       srsnet:
           ipv4_address: "172.18.0.4"
@@ -187,8 +180,8 @@ services:
   ue1:
     build:
       context: .
-      dockerfile: ./Dockerfile_ue
-    image: naposto/srsue
+      dockerfile: ./Dockerfile.ue
+    image: naposto/srs-enb-ue
     container_name: ue1
     privileged: true
     depends_on:
@@ -197,15 +190,13 @@ services:
       - type: bind
         source: ./test/docker_files/ue.conf
         target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
     networks:
       srsnet:
         ipv4_address: "172.18.0.5"
 
   ue2:
-    build:
-      context: .
-      dockerfile: ./Dockerfile_ue
-    image: naposto/srsue
+    image: naposto/srs-enb-ue
     container_name: ue2
     privileged: true
     depends_on:
@@ -214,15 +205,13 @@ services:
       - type: bind
         source: ./test/docker_files/ue2.conf
         target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
     networks:
         srsnet:  
           ipv4_address: "172.18.0.6"
   
   ue3:
-    build:
-      context: .
-      dockerfile: ./Dockerfile_ue
-    image: naposto/srsue
+    image: naposto/srs-enb-ue
     container_name: ue3
     privileged: true
     depends_on:
@@ -231,15 +220,13 @@ services:
       - type: bind        
         source: ./test/docker_files/ue3.conf
         target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
     networks:
         srsnet:
             ipv4_address: "172.18.0.7"
 
   ue4:
-    build:
-      context: .
-      dockerfile: ./Dockerfile_ue
-    image: naposto/srsue
+    image: naposto/srs-enb-ue
     container_name: ue4
     privileged: true
     depends_on:
@@ -248,6 +235,7 @@ services:
       - type: bind        
         source: ./test/docker_files/ue4.conf
         target: /conf/ue.conf
+    command: ["srsue", "/conf/ue.conf"]
     networks:
         srsnet:
             ipv4_address: "172.18.0.8"

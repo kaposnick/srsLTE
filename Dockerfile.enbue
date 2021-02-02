@@ -24,7 +24,7 @@ RUN apt update \
  && git checkout ${SRSLTE_CHECKOUT} \
  && mkdir build \
  && cd build \
- && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/srslte -DENABLE_SRSUE=OFF -DENABLE_SRSEPC=OFF ../ \
+ && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/srslte -DENABLE_SRSEPC=OFF ../ \
  && make \
  && make install \
  && ./srslte_install_configs.sh user
@@ -46,5 +46,3 @@ COPY --from=builder /root/.config/srslte/ /root/.config/srslte/
 
 ENV LD_LIBRARY_PATH /opt/srslte/lib:$LD_LIBRARY_PATH
 ENV PATH /opt/srslte/bin:$PATH
-
-CMD ["srsenb", "--enb_files.rr_config", "/conf/rr.conf", "/conf/enb.conf"]
