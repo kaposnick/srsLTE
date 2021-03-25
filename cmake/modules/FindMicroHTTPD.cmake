@@ -1,0 +1,35 @@
+# - Try to find microhttpd
+#
+
+INCLUDE(FindPkgConfig)
+PKG_CHECK_MODULES(PC_MICROHTTPD microhttpd)
+
+#find Mbedtls
+FIND_PATH(
+    MICROHTTPD_INCLUDE_DIRS
+    NAMES microhttpd.h
+    HINTS ${PC_MICROHTTPD_INCLUDEDIR}
+          ${CMAKE_INSTALL_PREFIX}/include
+    PATHS /usr/local/include
+          /usr/include
+)
+
+FIND_LIBRARY(
+    MICROHTTPD_LIBRARIES
+    NAMES microhttpd
+    HINTS ${PC_MICROHTTPD_LIBDIR}
+          ${CMAKE_INSTALL_PREFIX}/lib
+          ${CMAKE_INSTALL_PREFIX}/lib64
+    PATHS /usr/local/lib
+          /usr/local/lib64
+          /usr/lib
+          /usr/lib64
+          /usr/lib/x86_64-linux-gnu/
+)
+
+message(STATUS "MICROHTTPD LIBRARIES: " ${MICROHTTPD_LIBRARIES})
+message(STATUS "MICROHTTPD INCLUDE DIRS: " ${MICROHTTPD_INCLUDE_DIRS})
+
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(MICROHTTPD DEFAULT_MSG MICROHTTPD_LIBRARIES MICROHTTPD_INCLUDE_DIRS)
+MARK_AS_ADVANCED(MICROHTTPD_LIBRARIES MICROHTTPD_INCLUDE_DIRS)

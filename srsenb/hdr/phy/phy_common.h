@@ -192,7 +192,7 @@ private:
   bool                                     have_mtch_stop   = false;
   pthread_mutex_t                          mtch_mutex       = {};
   pthread_cond_t                           mtch_cvar        = {};
-  phy_interface_stack_lte::phy_cfg_mbsfn_t mbsfn            = {};
+  phy_interface_stack_lte::phy_cfg_mbsfn_t mbsfn            = phy_interface_stack_lte::phy_cfg_mbsfn_t();
   bool                                     sib13_configured = false;
   bool                                     mcch_configured  = false;
   uint8_t                                  mch_table[40]    = {};

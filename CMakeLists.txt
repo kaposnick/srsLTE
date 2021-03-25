@@ -129,6 +129,11 @@ endif()
 # Threads
 find_package(Threads REQUIRED)
 
+# find_package(Libmicrohttpd REQUIRED)
+# include_directories(${LIBMICROHTTPD_INCLUDE_DIRS})
+# link_directories(${LIBMICROHTTPD_LIBRARY_DIRS})
+# set(FFT_LIBRARIES "${MKL_STATIC_LIBRARIES}") # Static by default
+
 # FFT
 if(USE_MKL)
   find_package(MKL REQUIRED)

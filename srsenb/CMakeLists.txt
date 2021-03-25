@@ -20,6 +20,7 @@
 
 find_package(LibConfig REQUIRED)
 find_package(SCTP REQUIRED)
+find_package(MicroHTTPD REQUIRED)
 
 if(BUILD_STATIC)
   set(LIBCONFIGPP_LIBRARIES "${LIBCONFIGPP_STATIC_LIBRARY_PATH}")

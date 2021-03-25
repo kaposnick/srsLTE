@@ -43,6 +43,7 @@
 #include "srsenb/hdr/enb.h"
 #include "srsenb/hdr/metrics_csv.h"
 #include "srsenb/hdr/metrics_stdout.h"
+#include "srsenb/hdr/metrics_http_scrape.h"
 
 using namespace std;
 using namespace srsenb;
@@ -190,6 +191,9 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     ("expert.metrics_period_secs", bpo::value<float>(&args->general.metrics_period_secs)->default_value(1.0), "Periodicity for metrics in seconds")
     ("expert.metrics_csv_enable",  bpo::value<bool>(&args->general.metrics_csv_enable)->default_value(false), "Write metrics to CSV file")
     ("expert.metrics_csv_filename", bpo::value<string>(&args->general.metrics_csv_filename)->default_value("/tmp/enb_metrics.csv"), "Metrics CSV filename")
+    ("expert.metrics_http_scrape_enable",  bpo::value<bool>(&args->general.http_scrape_enable)->default_value(false), "Export metrics to HTTP")
+    ("expert.metrics_http_scrape_bind_ip",  bpo::value<string>(&args->general.http_scrape_bind_ip)->default_value("0.0.0.0"), "HTTP Endpoint bind ip-addres")
+    ("expert.metrics_http_scrape_port",  bpo::value<int>(&args->general.http_scrape_port)->default_value(8080), "HTTP Endpoint bind-port")
     ("expert.pusch_max_its", bpo::value<int>(&args->phy.pusch_max_its)->default_value(8), "Maximum number of turbo decoder iterations")
     ("expert.pusch_8bit_decoder", bpo::value<bool>(&args->phy.pusch_8bit_decoder)->default_value(false), "Use 8-bit for LLR representation and turbo decoder trellis computation (Experimental)")
     ("expert.pusch_meas_evm", bpo::value<bool>(&args->phy.pusch_meas_evm)->default_value(false), "Enable/Disable PUSCH EVM measure")
@@ -508,6 +512,14 @@ int main(int argc, char* argv[])
     metricshub.add_listener(&metrics_file);
     metrics_file.set_handle(enb.get());
   }
+
+  srsenb::metrics_http_scrape metrics_http;
+  if (args.general.http_scrape_enable) {
+    metrics_http.init(args.general.http_scrape_bind_ip, args.general.http_scrape_port);
+    metricshub.add_listener(&metrics_http);
+    metrics_http.set_handle(args.enb.enb_id);
+  }
+
 
   // create input thread
   std::thread input(&input_loop, &metrics_screen, (enb_command_interface*)enb.get());

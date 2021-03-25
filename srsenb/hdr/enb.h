@@ -91,6 +91,9 @@ struct general_args_t {
   uint32_t    rrc_inactivity_timer;
   float       metrics_period_secs;
   bool        metrics_csv_enable;
+  bool        http_scrape_enable;
+  std::string http_scrape_bind_ip;
+  int         http_scrape_port;
   std::string metrics_csv_filename;
   bool        print_buffer_state;
   std::string eia_pref_list;
