@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "srsENB",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/local/bin/srsenb",
+            "args": [
+                "--expert.metrics_http_scrape_enable", "true",
+                "--expert.metrics_http_scrape_port", "8082",
+                "--enb_files.rr_config", "${workspaceFolder}/test/inter_cell_handover/rr.conf",
+                "--enb_files.sib_config","${workspaceFolder}/test/inter_cell_handover/sib.conf",
+                "--enb_files.drb_config","${workspaceFolder}/test/inter_cell_handover/drb.conf",
+                "${workspaceFolder}/test/inter_cell_handover/enb.conf"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["2", "15"]
+        }
+    ]
+}
